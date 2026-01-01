@@ -4,7 +4,14 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     subdomain: DataTypes.STRING,
     status: DataTypes.ENUM('active', 'suspended'),
-    subscription_plan: DataTypes.ENUM('free', 'pro', 'enterprise'),
+    subscription_plan: {
+      type: DataTypes.ENUM('free', 'pro', 'enterprise'),
+      defaultValue: 'free'
+    },
+    pending_plan: {
+      type: DataTypes.ENUM('free', 'pro', 'enterprise'),
+      allowNull: true
+    },
     max_users: DataTypes.INTEGER,
     max_projects: DataTypes.INTEGER
   }, {

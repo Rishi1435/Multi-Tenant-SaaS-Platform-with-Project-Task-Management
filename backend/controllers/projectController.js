@@ -1,18 +1,36 @@
-const { Project, Task, User } = require('../models');
+const { Project, User, Tenant,Task } = require('../models');
+const PLAN_LIMITS = require('../utils/planLimits'); // Import limits
 
-// 1. Create Project
+
+//1. Create Tenant
+
 exports.createProject = async (req, res) => {
   try {
     const { name, description, status } = req.body;
+    const tenantId = req.user.tenantId;
 
-    // Tenant ID comes from the JWT Token (req.user), NOT the request body
-    // This is critical for security/isolation
+    // 1. Fetch Tenant to check Plan
+    const tenant = await Tenant.findByPk(tenantId);
+    const limits = PLAN_LIMITS[tenant.subscription_plan] || PLAN_LIMITS['free'];
+
+    // 2. Count existing projects
+    const currentCount = await Project.count({ where: { tenant_id: tenantId } });
+
+    // 3. ENFORCE LIMIT
+    if (currentCount >= limits.max_projects) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Plan limit reached (${limits.max_projects} projects). Upgrade your plan to create more.` 
+      });
+    }
+
+    // 4. Create Project (Existing logic)
     const project = await Project.create({
-      tenant_id: req.user.tenantId,
-      created_by: req.user.userId,
+      tenant_id: tenantId,
       name,
       description,
-      status: status || 'active'
+      status: status || 'active',
+      created_by: req.user.userId
     });
 
     res.status(201).json({ success: true, data: project });
@@ -20,6 +38,7 @@ exports.createProject = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 // 2. List Projects (Scoped to Tenant)
 exports.getProjects = async (req, res) => {

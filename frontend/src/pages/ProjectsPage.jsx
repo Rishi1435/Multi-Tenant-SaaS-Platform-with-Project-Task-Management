@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { Plus, Search, Folder, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom'; // <--- 1. ADDED IMPORT HERE
+import { Plus, Search, Folder, Trash2, Calendar } from 'lucide-react';
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Form State
   const [formData, setFormData] = useState({ name: '', description: '', status: 'active' });
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  useEffect(() => { fetchProjects(); }, []);
 
   const fetchProjects = async () => {
     try {
       const res = await client.get('/projects');
       setProjects(res.data.data);
-    } catch (error) {
-      console.error('Failed to fetch projects', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
   const handleCreate = async (e) => {
@@ -38,136 +30,97 @@ const ProjectsPage = () => {
       await client.post('/projects', formData);
       setIsModalOpen(false);
       setFormData({ name: '', description: '', status: 'active' });
-      fetchProjects(); 
-    } catch (error) {
-      console.error('Failed to create project', error);
-    } finally {
-      setSubmitLoading(false);
-    }
+      fetchProjects();
+    } catch (error) { console.error(error); } finally { setSubmitLoading(false); }
   };
 
   const handleDelete = async (id) => {
-    if(!window.confirm('Are you sure? This will delete all tasks in this project.')) return;
-    try {
-      await client.delete(`/projects/${id}`);
-      fetchProjects();
-    } catch (error) {
-      console.error('Failed to delete', error);
-    }
+    if(!window.confirm('Delete this project?')) return;
+    try { await client.delete(`/projects/${id}`); fetchProjects(); } catch (error) { console.error(error); }
   };
 
-  const filteredProjects = projects.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = projects.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="space-y-6">
-      {/* Header & Actions */}
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projects</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your team's workspace</p>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400">Projects</h1>
+          <p className="text-zinc-500 text-sm mt-1">Manage and track your ongoing work</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
+        <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20 border border-indigo-500/50">
+          <Plus className="h-4 w-4 mr-2" /> New Project
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+      {/* Search */}
+      <div className="relative max-w-md group">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" />
         <input 
           type="text" 
           placeholder="Search projects..." 
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-full bg-zinc-900/50 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none transition-all"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Grid Layout */}
+      {/* Grid */}
       {loading ? (
-        <div className="text-center py-20 text-slate-500">Loading projects...</div>
-      ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-dashed border-slate-700">
-          <Folder className="h-12 w-12 mx-auto text-slate-600 mb-4" />
-          <h3 className="text-lg font-medium text-slate-300">No projects found</h3>
-          <p className="text-slate-500 text-sm mt-1">Get started by creating a new project.</p>
+        <div className="text-zinc-500">Loading projects...</div>
+      ) : filtered.length === 0 ? (
+        <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl bg-white/5">
+          <Folder className="h-12 w-12 mx-auto text-zinc-600 mb-4" />
+          <p className="text-zinc-400">No projects found. Create one to get started.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <div key={project.id} className="group bg-slate-800 rounded-xl border border-slate-700 p-5 hover:border-blue-500/50 transition-colors shadow-lg">
-              
-              {/* Card Header */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Folder className="h-6 w-6 text-blue-500" />
+          {filtered.map((project) => (
+            <div key={project.id} className="group bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-6 rounded-2xl hover:border-indigo-500/30 hover:bg-zinc-900/60 transition-all duration-300 hover:-translate-y-1 shadow-xl">
+              <div className="flex justify-between items-start mb-5">
+                <div className="p-3 bg-zinc-800 rounded-xl group-hover:bg-indigo-500/20 transition-colors">
+                  <Folder className="h-6 w-6 text-zinc-400 group-hover:text-indigo-400" />
                 </div>
                 <div className="flex gap-2">
-                  <span className={`px-2 py-1 text-xs rounded-full border ${
-                    project.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                    project.status === 'completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                    'bg-slate-700 text-slate-400 border-slate-600'
+                   <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${
+                    project.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                    'bg-zinc-800 text-zinc-400 border-zinc-700'
                   }`}>
                     {project.status}
                   </span>
-                  <button 
-                    onClick={() => handleDelete(project.id)}
-                    className="text-slate-500 hover:text-red-400 transition-colors"
-                  >
+                  <button onClick={() => handleDelete(project.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               
-              {/* 2. CHANGED SECTION: Wrapped Title in Link */}
-              <Link to={`/projects/${project.id}`} className="block group-hover:opacity-100">
-                 <h3 className="text-lg font-semibold text-white mb-2 hover:text-blue-400 transition-colors cursor-pointer">
-                    {project.name}
-                 </h3>
+              <Link to={`/projects/${project.id}`} className="block">
+                 <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">{project.name}</h3>
               </Link>
+              <p className="text-zinc-400 text-sm line-clamp-2 h-10 mb-6">{project.description}</p>
               
-              <p className="text-slate-400 text-sm line-clamp-2 h-10">{project.description || 'No description provided.'}</p>
-              
-              <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-xs text-slate-500">
-                <span>Created by {project.creator?.full_name || 'Unknown'}</span>
-                <span>{new Date(project.created_at).toLocaleDateString()}</span>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500">
+                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(project.created_at).toLocaleDateString()}</span>
+                <span className="bg-zinc-800 px-2 py-1 rounded text-zinc-300">{project.creator?.full_name}</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Create Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Create New Project"
-      >
+      {/* Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Project">
         <form onSubmit={handleCreate} className="space-y-4">
-          <Input 
-            label="Project Name" 
-            required 
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-          />
+          <Input label="Project Name" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
-            <textarea 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-blue-500 focus:border-blue-500 focus:outline-none h-24"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-            />
+            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Description</label>
+            <textarea className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none h-24" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
           </div>
-          <div className="pt-2">
-            <Button type="submit" className="w-full" isLoading={submitLoading}>Create Project</Button>
-          </div>
+          <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500" isLoading={submitLoading}>Create Project</Button>
         </form>
       </Modal>
     </div>
   );
 };
-
 export default ProjectsPage;

@@ -1,10 +1,53 @@
-const { Project, Task, User } = require('../models');
+const { Project, Task, User, Tenant } = require('../models');
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
+    // ==========================================
+    // LOGIC FOR SUPER ADMIN
+    // ==========================================
+    if (req.user.role === 'super_admin') {
+      const [tenantCount, userCount, activeTenants] = await Promise.all([
+        Tenant.count(),
+        User.count(),
+        Tenant.count({ where: { status: 'active' } })
+      ]);
 
-    // Run counts in parallel for performance
+      const recentTenants = await Tenant.findAll({
+        limit: 5,
+        order: [['created_at', 'DESC']],
+        attributes: ['id', 'name', 'created_at', 'subscription_plan']
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          role: 'super_admin',
+          stats: [
+            { title: 'Total Workspaces', value: tenantCount, icon: 'Building', color: 'blue' },
+            { title: 'Total Users', value: userCount, icon: 'Users', color: 'purple' },
+            { title: 'Active Tenants', value: activeTenants, icon: 'Activity', color: 'green' },
+            { title: 'System Health', value: '100%', icon: 'Server', color: 'emerald' }
+          ],
+          activities: recentTenants.map(t => ({
+            id: t.id,
+            text: `New workspace registered: ${t.name}`,
+            subtext: `${t.subscription_plan.toUpperCase()} Plan`,
+            time: t.created_at
+          }))
+        }
+      });
+    }
+
+    // ==========================================
+    // LOGIC FOR TENANT ADMIN / STANDARD USER
+    // ==========================================
+    const tenantId = req.user.tenantId;
+    
+    // Fetch Tenant details including the new 'pending_plan' field
+    const tenant = await Tenant.findByPk(tenantId, {
+      attributes: ['name', 'subscription_plan', 'pending_plan'] 
+    });
+    
     const [projectCount, taskCount, userCount, activeTasks] = await Promise.all([
       Project.count({ where: { tenant_id: tenantId } }),
       Task.count({ where: { tenant_id: tenantId } }),
@@ -12,20 +55,37 @@ exports.getDashboardStats = async (req, res) => {
       Task.count({ where: { tenant_id: tenantId, status: ['todo', 'in_progress'] } })
     ]);
 
-    // Calculate completion rate (avoid division by zero)
-    const completedTasks = taskCount - activeTasks;
-    const completionRate = taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0;
+    const recentTasks = await Task.findAll({
+      where: { tenant_id: tenantId },
+      limit: 5,
+      order: [['created_at', 'DESC']],
+      include: [{ model: User, as: 'assignee', attributes: ['full_name'] }]
+    });
+
+    const completionRate = taskCount > 0 ? Math.round(((taskCount - activeTasks) / taskCount) * 100) : 0;
 
     res.json({
       success: true,
       data: {
-        projects: projectCount,
-        totalTasks: taskCount,
-        activeTasks: activeTasks,
-        users: userCount,
-        completionRate: completionRate
+        role: 'user',
+        companyName: tenant.name,
+        plan: tenant.subscription_plan,
+        pendingPlan: tenant.pending_plan, // <--- ADDED THIS FIELD
+        stats: [
+          { title: 'Active Projects', value: projectCount, icon: 'FolderKanban', color: 'blue' },
+          { title: 'Pending Tasks', value: activeTasks, icon: 'Activity', color: 'rose' },
+          { title: 'Team Members', value: userCount, icon: 'Users', color: 'violet' },
+          { title: 'Completion Rate', value: `${completionRate}%`, icon: 'BarChart3', color: 'emerald' }
+        ],
+        activities: recentTasks.map(t => ({
+          id: t.id,
+          text: `New task created: ${t.title}`,
+          subtext: t.assignee ? `Assigned to ${t.assignee.full_name}` : 'Unassigned',
+          time: t.created_at
+        }))
       }
     });
+
   } catch (error) {
     console.error('Dashboard Error:', error);
     res.status(500).json({ success: false, error: error.message });

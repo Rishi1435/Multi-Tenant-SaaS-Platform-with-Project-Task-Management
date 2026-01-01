@@ -5,7 +5,9 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage'; // <--- THIS WAS MISSING
+import ProjectDetailsPage from './pages/ProjectDetailsPage';
+import TeamPage from './pages/TeamPage';
+import AdminTenantsPage from './pages/AdminTenantsPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -30,6 +32,8 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailsPage />} />
+            <Route path="team" element={<TeamPage />} />
+            <Route path="admin/tenants" element={<AdminTenantsPage />} />
           </Route>
         </Routes>
       </AuthProvider>
