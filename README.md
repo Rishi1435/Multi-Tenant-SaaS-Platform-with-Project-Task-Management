@@ -35,7 +35,7 @@ Built with **React (Vite)**, **Node.js (Express)**, **PostgreSQL**, and **Docker
 
 | Tenant Dashboard | Super Admin View |
 |:---:|:---:|
-| ![Dashboard](./images/dashboard.png) | ![Admin](./images/admin.png) |
+| ![Dashboard](docs/images/dashboard.png) | ![Admin](docs/images/admin.png) |
 | **Requesting Upgrade** | **Approving Request** |
 
 ## 🛠️ Tech Stack
