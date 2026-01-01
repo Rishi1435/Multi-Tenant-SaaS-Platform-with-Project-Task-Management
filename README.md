@@ -1,57 +1,134 @@
-# SaaS Project & Task Management Platform
+# Enterprise Multi-Tenant SaaS Platform
 
-## Overview
-A production-ready, multi-tenant SaaS application where multiple organizations can register, manage teams, create projects, and track tasks. This system ensures complete data isolation between tenants and implements Role-Based Access Control (RBAC).
+A production-grade SaaS application featuring **Strict Multi-Tenancy**, **Role-Based Access Control (RBAC)**, and a **Subscription Management Engine** with an approval workflow.
 
-**Target Audience:** Startups and SMBs requiring isolated project management workspaces.
+Built with **React (Vite)**, **Node.js (Express)**, **PostgreSQL**, and **Docker**.
 
-## Key Features
-* **Multi-Tenancy:** Complete data isolation using shared-database/shared-schema architecture.
-* **Authentication:** Secure JWT-based auth with Role-Based Access Control (Super Admin, Tenant Admin, User).
-* **Tenant Management:** Automatic subdomain generation and subscription limits.
-* **Project Tracking:** Create, edit, and archive projects.
-* **Task Management:** Assign tasks, set priorities, and track status.
-* **Dark Mode UI:** Professional, responsive React interface with Tailwind CSS.
-* **Dockerized:** Fully containerized setup for Database, Backend, and Frontend.
-* **Audit Logging:** Tracks critical system actions for security.
+---
 
-## Technology Stack
-* **Frontend:** React (Vite), Tailwind CSS
-* **Backend:** Node.js, Express.js
-* **Database:** PostgreSQL 15
-* **DevOps:** Docker, Docker Compose
+## 🚀 Key Features
 
-## Installation & Setup
+### 1. Multi-Tenancy Architecture
+- **Data Isolation:** Each tenant (company) sees only their own data.
+- **Subdomain Logic:** Users are identified by their workspace subdomain (e.g., `tesla.saas-platform.com`).
+
+### 2. Subscription Engine with "Approval Workflow"
+- **Tiered Plans:** Free (Default), Pro, Enterprise.
+- **Limit Enforcement:**
+  - **Free:** Max 5 Users, 3 Projects.
+  - **Pro:** Max 25 Users, 15 Projects.
+  - **Enterprise:** Max 100 Users, 50 Projects.
+- **Upgrade Workflow:** Tenants cannot instantly upgrade. They must **Request** an upgrade, which the Super Admin must **Approve**.
+
+### 3. Role-Based Access Control (RBAC)
+- **Super Admin:** Manages Tenants (Companies), approves billing/plans. Cannot see inside Tenant projects.
+- **Tenant Admin:** Manages their company's projects, tasks, and team members.
+- **Member:** Can view/edit assigned tasks but cannot manage billing or users.
+
+### 4. Modern UI/UX
+- **"Midnight Zinc" Theme:** Premium dark mode with glassmorphism effects.
+- **Real-time Feedback:** Pending badges, active status indicators.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React.js, Tailwind CSS, Lucide Icons, Vite.
+- **Backend:** Node.js, Express.js, Sequelize ORM.
+- **Database:** PostgreSQL.
+- **DevOps:** Docker & Docker Compose.
+
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
-* Docker & Docker Compose installed on your machine.
-* Git
+- Docker & Docker Compose installed.
 
-### Steps to Run
-1.  **Clone the repository:**
-    ```bash
-    git clone <repo-url>
-    cd saas-platform
-    ```
+### Installation
 
-2.  **Start the Application:**
-    The entire stack (DB, Backend, Frontend) starts with one command:
-    ```bash
-    docker-compose up -d --build
-    ```
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd saas-platform
+```
 
-3.  **Access the App:**
-    * **Frontend:** [http://localhost:3000](http://localhost:3000)
-    * **Backend Health:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
+2. **Start the application:**
+```bash
+docker-compose up -d --build
+```
 
-### Environment Variables
-The application comes with a pre-configured `.env` file (embedded in docker-compose for ease of evaluation).
-* `DB_HOST`, `DB_USER`, `DB_PASSWORD`: Database connection details.
-* `JWT_SECRET`: Secret key for signing tokens.
-* `FRONTEND_URL`: URL for CORS configuration.
+3. **Access the App:**
+   - **Frontend:** `http://localhost:3000`
+   - **Backend:** `http://localhost:5000`
 
-## API Documentation
-Full API documentation is available in [docs/architecture.md](docs/architecture.md).
+---
 
-## Demo Video
+## 🔐 Default Credentials
 
+### 1. System Super Admin
+*Use this account to approve upgrades and view platform stats.*
+- **Workspace Subdomain:** *(Leave Empty)*
+- **Email:** `superadmin@system.com`
+- **Password:** `Admin@123`
+
+### 2. Demo Tenant Admin
+*Use this account to manage projects and request upgrades.*
+- **Workspace Subdomain:** `demo`
+- **Email:** `admin@demo.com`
+- **Password:** `Demo@123`
+
+---
+
+## 📖 User Guide & Workflows
+
+### 🧪 Workflow 1: The "Upgrade Approval" Cycle
+This demonstrates the interaction between Tenant and Super Admin.
+
+1. **Login as Tenant:**
+   - Login with `admin@demo.com`.
+   - Go to Dashboard. Note the current plan is "Free".
+   - Click **"Request Upgrade"**. Select "Pro".
+   - *Result:* You will see a yellow "Request Pending" badge. Limits remain unchanged.
+
+2. **Approve as Super Admin:**
+   - Logout and Login as `superadmin@system.com`.
+   - You will see a yellow **"Action Required"** banner at the top of the dashboard.
+   - Go to the **Workspaces** tab.
+   - Find "Demo Company". You will see the request details.
+   - Click **"Approve"**.
+
+3. **Verify:**
+   - Login back in as `admin@demo.com`.
+   - The badge is gone, and the plan is now "Pro". You can now add more than 5 users.
+
+### 🧪 Workflow 2: Enforcing Limits
+1. Login as a Tenant on the **Free Plan**.
+2. Go to **Projects** and create 3 projects.
+3. Try to create a 4th project.
+4. *Result:* The system blocks the request with a "Plan Limit Reached" error.
+
+---
+
+## 📂 Project Structure
+
+```text
+/
+├── backend/
+│   ├── config/         # DB Config
+│   ├── controllers/    # Business Logic (Tenant, Project, Auth)
+│   ├── middleware/     # Auth & RBAC Middleware
+│   ├── models/         # Sequelize Models (User, Tenant, Project)
+│   ├── routes/         # API Routes
+│   └── server.js       # Entry point
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/        # Axios setup
+│   │   ├── components/ # Reusable UI (Modal, Button, Layout)
+│   │   ├── context/    # Auth Context
+│   │   └── pages/      # Dashboard, Login, Admin, Teams
+│   └── Dockerfile
+│
+└── docker-compose.yml  # Orchestration
+```
