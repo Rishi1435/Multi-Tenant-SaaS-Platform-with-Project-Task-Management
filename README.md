@@ -31,6 +31,13 @@ Built with **React (Vite)**, **Node.js (Express)**, **PostgreSQL**, and **Docker
 
 ---
 
+## 📸 Screenshots
+
+| Tenant Dashboard | Super Admin View |
+|:---:|:---:|
+| ![Dashboard](./images/dashboard.png) | ![Admin](./images/admin.png) |
+| **Requesting Upgrade** | **Approving Request** |
+
 ## 🛠️ Tech Stack
 
 - **Frontend:** React.js, Tailwind CSS, Lucide Icons, Vite.
