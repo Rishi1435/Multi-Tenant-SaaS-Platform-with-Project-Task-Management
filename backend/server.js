@@ -3,8 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const initializeDatabase = require('./utils/dbInit');
 const db = require('./models'); 
+const routes= require('./routes');
 
 const app = express();
+app.use('/api',routes);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
