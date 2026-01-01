@@ -26,8 +26,9 @@ function App() {
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} /> {/* Update this */}
-            <Route path="projects" element={<ProjectsPage />} /> {/* Replace placeholder */}
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="projects/:id" element={<ProjectDetailsPage />} />
           </Route>
         </Routes>
       </AuthProvider>

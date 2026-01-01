@@ -3,7 +3,8 @@ import client from '../api/client';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { Plus, Search, Folder, MoreVertical, Trash2 } from 'lucide-react';
+import { Plus, Search, Folder, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom'; // <--- 1. ADDED IMPORT HERE
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
@@ -37,7 +38,7 @@ const ProjectsPage = () => {
       await client.post('/projects', formData);
       setIsModalOpen(false);
       setFormData({ name: '', description: '', status: 'active' });
-      fetchProjects(); // Refresh list
+      fetchProjects(); 
     } catch (error) {
       console.error('Failed to create project', error);
     } finally {
@@ -98,6 +99,8 @@ const ProjectsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
             <div key={project.id} className="group bg-slate-800 rounded-xl border border-slate-700 p-5 hover:border-blue-500/50 transition-colors shadow-lg">
+              
+              {/* Card Header */}
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-blue-500/10 rounded-lg">
                   <Folder className="h-6 w-6 text-blue-500" />
@@ -118,10 +121,16 @@ const ProjectsPage = () => {
                   </button>
                 </div>
               </div>
-
-              <h3 className="text-lg font-semibold text-white mb-2">{project.name}</h3>
+              
+              {/* 2. CHANGED SECTION: Wrapped Title in Link */}
+              <Link to={`/projects/${project.id}`} className="block group-hover:opacity-100">
+                 <h3 className="text-lg font-semibold text-white mb-2 hover:text-blue-400 transition-colors cursor-pointer">
+                    {project.name}
+                 </h3>
+              </Link>
+              
               <p className="text-slate-400 text-sm line-clamp-2 h-10">{project.description || 'No description provided.'}</p>
-
+              
               <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-xs text-slate-500">
                 <span>Created by {project.creator?.full_name || 'Unknown'}</span>
                 <span>{new Date(project.created_at).toLocaleDateString()}</span>
