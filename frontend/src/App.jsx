@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ProjectsPage from './pages/ProjectsPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -26,7 +27,7 @@ function App() {
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} /> {/* Update this */}
-            <Route path="projects" element={<div className="text-white text-2xl">Projects Work in Progress</div>} />
+            <Route path="projects" element={<ProjectsPage />} /> {/* Replace placeholder */}
           </Route>
         </Routes>
       </AuthProvider>
