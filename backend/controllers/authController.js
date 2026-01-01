@@ -2,6 +2,98 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sequelize, Tenant, User } = require('../models');
 
+exports.login = async (req, res) => {
+  try {
+    const { email, password, tenantSubdomain } = req.body;
+
+    // 1. Find Tenant
+    // (If logging in as Super Admin, they might not provide a subdomain, 
+    // but for now let's assume standard tenant login flow)
+    let tenantId = null;
+    if (tenantSubdomain) {
+      const tenant = await Tenant.findOne({ where: { subdomain: tenantSubdomain } });
+      if (!tenant) {
+        return res.status(404).json({ success: false, message: 'Tenant not found' });
+      }
+      tenantId = tenant.id;
+    }
+
+    // 2. Find User
+    // We look for a user with this email who belongs to this tenant OR is a super_admin
+    const user = await User.findOne({ 
+      where: { email },
+      include: [{ model: Tenant }] 
+    });
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // 3. Check Tenant Association
+    // If user is NOT super_admin, they MUST belong to the requested tenant
+    if (user.role !== 'super_admin' && user.tenant_id !== tenantId) {
+      return res.status(401).json({ success: false, message: 'User does not belong to this tenant' });
+    }
+
+    // 4. Verify Password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // 5. Generate Token
+    // Payload: userId, tenantId (from user, or the one they logged into), role
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        tenantId: user.tenant_id || tenantId, // Use context tenant for super_admin
+        role: user.role 
+      },
+      process.env.JWT_SECRET || 'dev_secret_key_change_in_production',
+      { expiresIn: '24h' }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name,
+          role: user.role,
+          tenantId: user.tenant_id
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    // req.user is set by the middleware (which we will build next)
+    const user = await User.findByPk(req.user.userId, {
+      attributes: { exclude: ['password_hash'] },
+      include: [{ model: Tenant }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 exports.registerTenant = async (req, res) => {
   const t = await sequelize.transaction(); // Start Transaction
 
