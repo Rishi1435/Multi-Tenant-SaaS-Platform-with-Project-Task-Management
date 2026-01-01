@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -24,7 +25,7 @@ function App() {
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<div className="text-white text-2xl">Dashboard Work in Progress</div>} />
+            <Route path="dashboard" element={<DashboardPage />} /> {/* Update this */}
             <Route path="projects" element={<div className="text-white text-2xl">Projects Work in Progress</div>} />
           </Route>
         </Routes>

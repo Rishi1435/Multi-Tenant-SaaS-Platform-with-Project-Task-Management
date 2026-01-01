@@ -42,7 +42,7 @@ services:
       - ./backend:/app
       - /app/node_modules
 
-  # 3. Frontend Service
+ # 3. Frontend Service
   frontend:
     build: ./frontend
     container_name: frontend
@@ -50,7 +50,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Merged environment variables here:
       REACT_APP_API_URL: http://localhost:5000/api
       WATCHPACK_POLLING: "true"
     depends_on:
@@ -59,6 +58,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    # ADD THIS LINE BELOW (This forces packages to install on boot):
+    command: sh -c "npm install && npm run dev -- --host"
 
 volumes:
   db_data:
