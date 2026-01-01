@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const projectController = require('../controllers/projectController');
+const taskController = require('../controllers/taskController');
 const { protect } = require('../middleware/authMiddleware');
 
-// All routes are protected
 router.use(protect);
+
 
 router.route('/')
   .get(projectController.getProjects)
@@ -12,5 +13,10 @@ router.route('/')
 router.route('/:id')
   .put(projectController.updateProject)
   .delete(projectController.deleteProject);
+
+
+router.route('/:projectId/tasks')
+  .post(taskController.createTask)
+  .get(taskController.getTasksByProject);
 
 module.exports = router;
