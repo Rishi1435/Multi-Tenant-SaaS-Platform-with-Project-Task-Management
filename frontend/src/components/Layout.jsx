@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, FolderKanban, CheckSquare, LogOut, User, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, LogOut, User, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from './ui/Button';
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -12,8 +13,6 @@ const Layout = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Projects', href: '/projects', icon: FolderKanban },
   ];
-
-  // Add Tasks link if user is inside a project context (optional logic)
 
   const NavItem = ({ item }) => {
     const isActive = location.pathname.startsWith(item.href);
@@ -83,7 +82,7 @@ const Layout = () => {
         <div className="flex-1 overflow-auto bg-slate-900 relative">
            {/* Background Gradients for visuals */}
            <div className="absolute top-0 left-0 w-full h-96 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none"></div>
-
+           
            <div className="relative p-4 lg:p-8">
              <Outlet />
            </div>

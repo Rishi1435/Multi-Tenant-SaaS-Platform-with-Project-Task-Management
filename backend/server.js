@@ -1,16 +1,19 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const cors = require('cors'); 
 const initializeDatabase = require('./utils/dbInit');
-const db = require('./models'); 
-const routes= require('./routes');
+const db = require('./models');
+const routes = require('./routes');
 
 const app = express();
-app.use('/api',routes);
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+
+app.use(cors()); 
+
+
 app.use(express.json());
+
 
 app.get('/api/health', async (req, res) => {
   try {
@@ -21,9 +24,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Start Server
+
+app.use('/api', routes);
+
+
 const startServer = async () => {
-  // Initialize DB (Migrate & Seed)
   await initializeDatabase();
 
   app.listen(PORT, '0.0.0.0', () => {
