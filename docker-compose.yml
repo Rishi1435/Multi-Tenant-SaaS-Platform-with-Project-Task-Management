@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. Database Service
   database:
@@ -52,15 +50,15 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Merged environment variables here:
       REACT_APP_API_URL: http://localhost:5000/api
+      WATCHPACK_POLLING: "true"
     depends_on:
       backend:
         condition: service_started
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    environment:
-      - WATCHPACK_POLLING=true
 
 volumes:
   db_data:
