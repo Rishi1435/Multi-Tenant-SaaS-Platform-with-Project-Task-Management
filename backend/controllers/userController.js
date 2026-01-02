@@ -29,51 +29,42 @@ exports.getTeamMembers = async (req, res) => {
   }
 };
 // 2. Create New User (Tenant Admin Only)
+// Create a new user (Team Member)
 exports.createUser = async (req, res) => {
   try {
-    const { email, fullName, password, role } = req.body;
-    const tenantId = req.user.tenantId;
+    // FIX: Destructure BOTH naming conventions
+    const { fullName, full_name, email, password, role } = req.body;
+    
+    // Get Tenant ID from the logged-in admin's token
+    const tenantId = req.user.tenantId; 
 
-    // 1. Fetch Tenant & Limits
-    const tenant = await Tenant.findByPk(tenantId);
-    const limits = PLAN_LIMITS[tenant.subscription_plan] || PLAN_LIMITS['free'];
-
-    // 2. Count existing users
-    const currentCount = await User.count({ where: { tenant_id: tenantId } });
-
-    // 3. ENFORCE LIMIT
-    if (currentCount >= limits.max_users) {
-      return res.status(403).json({ 
+    // Validation
+    if (!email || !password || (!fullName && !full_name)) {
+      return res.status(400).json({ 
         success: false, 
-        message: `Plan limit reached (${limits.max_users} users). Upgrade your plan to add more team members.` 
+        message: 'Please provide full name, email, and password' 
       });
     }
-    // Check if user exists in this tenant
-    const existingUser = await User.findOne({ 
-      where: { email, tenant_id: req.user.tenantId } 
-    });
 
+    // Check if user exists
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User already exists in this workspace' });
+      return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const newUser = await User.create({
-      tenant_id: req.user.tenantId, // Lock to current tenant
+    // Create User
+    const user = await User.create({
+      tenant_id: tenantId,
+      full_name: fullName || full_name, // <--- FIX: Use whichever is provided
       email,
-      full_name: fullName,
-      password_hash: passwordHash,
-      role: role || 'user',
-      is_active: true
+      password, // The model hook will hash this
+      role: role || 'member'
     });
 
-    res.status(201).json({ 
-      success: true, 
-      data: { id: newUser.id, email: newUser.email, fullName: newUser.full_name } 
-    });
+    res.status(201).json({ success: true, data: user });
 
   } catch (error) {
+    console.error("Create User Error:", error); // This helps you see the error in terminal
     res.status(500).json({ success: false, error: error.message });
   }
 };
