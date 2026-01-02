@@ -16,6 +16,18 @@ exports.getTenantUsers = async (req, res) => {
   }
 };
 
+// Get all users for the current tenant (Team Members)
+exports.getTeamMembers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      where: { tenant_id: req.user.tenantId },
+      attributes: ['id', 'full_name', 'email'] // Only fetch what we need
+    });
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 // 2. Create New User (Tenant Admin Only)
 exports.createUser = async (req, res) => {
   try {

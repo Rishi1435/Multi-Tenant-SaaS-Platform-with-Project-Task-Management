@@ -3,7 +3,7 @@ const { Project, Task, User, Tenant } = require('../models');
 exports.getDashboardStats = async (req, res) => {
   try {
     // ==========================================
-    // LOGIC FOR SUPER ADMIN
+    // 1. SUPER ADMIN VIEW
     // ==========================================
     if (req.user.role === 'super_admin') {
       const [tenantCount, userCount, activeTenants] = await Promise.all([
@@ -32,18 +32,18 @@ exports.getDashboardStats = async (req, res) => {
             id: t.id,
             text: `New workspace registered: ${t.name}`,
             subtext: `${t.subscription_plan.toUpperCase()} Plan`,
-            time: t.created_at
+            // Fix: Handle both casing styles for date
+            time: t.createdAt || t.created_at || new Date()
           }))
         }
       });
     }
 
     // ==========================================
-    // LOGIC FOR TENANT ADMIN / STANDARD USER
+    // 2. TENANT ADMIN / USER VIEW
     // ==========================================
     const tenantId = req.user.tenantId;
     
-    // Fetch Tenant details including the new 'pending_plan' field
     const tenant = await Tenant.findByPk(tenantId, {
       attributes: ['name', 'subscription_plan', 'pending_plan'] 
     });
@@ -70,7 +70,7 @@ exports.getDashboardStats = async (req, res) => {
         role: 'user',
         companyName: tenant.name,
         plan: tenant.subscription_plan,
-        pendingPlan: tenant.pending_plan, // <--- ADDED THIS FIELD
+        pendingPlan: tenant.pending_plan, 
         stats: [
           { title: 'Active Projects', value: projectCount, icon: 'FolderKanban', color: 'blue' },
           { title: 'Pending Tasks', value: activeTasks, icon: 'Activity', color: 'rose' },
@@ -81,7 +81,7 @@ exports.getDashboardStats = async (req, res) => {
           id: t.id,
           text: `New task created: ${t.title}`,
           subtext: t.assignee ? `Assigned to ${t.assignee.full_name}` : 'Unassigned',
-          time: t.created_at
+          time: t.createdAt || t.created_at || new Date()
         }))
       }
     });

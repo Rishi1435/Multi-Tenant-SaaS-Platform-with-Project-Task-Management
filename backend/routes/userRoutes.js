@@ -6,6 +6,7 @@ router.use(protect);
 
 router.get('/', authorize('tenant_admin', 'super_admin'), userController.getTenantUsers);
 router.post('/', authorize('tenant_admin'), userController.createUser);
-router.delete('/:id', authorize('tenant_admin'), userController.deleteUser); // <--- ADD THIS
+router.delete('/:id', authorize('tenant_admin'), userController.deleteUser);
+router.get('/', userController.getTeamMembers);
 
 module.exports = router;

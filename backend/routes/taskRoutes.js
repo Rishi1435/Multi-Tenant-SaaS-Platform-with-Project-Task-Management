@@ -5,6 +5,6 @@ const { protect } = require('../middleware/authMiddleware');
 router.use(protect);
 
 router.patch('/:id/status', taskController.updateTaskStatus);
-
+router.delete('/:id', taskController.deleteTask);
 
 module.exports = router;
